@@ -1,6 +1,7 @@
 from unittest.mock import patch, MagicMock
 import pytest
-from hero_find_func import get_tallest_hero, _parse_height_cm, NoHeroFoundError
+import requests
+from hero_find_func import get_tallest_hero, _parse_height_cm, NoHeroFoundError, url
 
 
 def make_hero(id, name, gender, height, occupation):
@@ -121,3 +122,26 @@ def test_parse_height_cm_empty_list():
 
 def test_parse_height_cm_none_input():
     assert _parse_height_cm(None) is None
+
+
+@pytest.mark.api
+def test_api_is_accesible():
+    response = requests.get(url)
+
+    assert response.status_code == 200
+
+
+@pytest.mark.api
+def test_get_tallest_hero_male_with_work_from_api():
+    hero = get_tallest_hero(gender="Male", has_work=True)
+
+    assert hero["appearance"]["gender"] == "Male"
+    assert hero["work"]["occupation"] not in ("-", "", None)
+
+
+@pytest.mark.api
+def test_get_tallest_hero_female_without_work_from_api():
+    hero = get_tallest_hero(gender="Female", has_work=False)
+
+    assert hero["appearance"]["gender"] == "Female"
+    assert hero["work"]["occupation"] in ("-", "", None)
